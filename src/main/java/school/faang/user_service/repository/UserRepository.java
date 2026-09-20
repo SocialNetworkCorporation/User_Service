@@ -1,10 +1,13 @@
 package school.faang.user_service.repository;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import school.faang.user_service.entity.Country;
 import school.faang.user_service.entity.User;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -25,4 +28,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Stream<User> findPremiumUsers();
 
     List<User> findByUsernameLike(String username);
+
+    default User getByIdOrThrow(long userId) {
+        return findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException(String.format("User with id %d not found", userId)));
+    }
 }
