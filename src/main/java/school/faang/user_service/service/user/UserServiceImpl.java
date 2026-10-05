@@ -6,15 +6,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import school.faang.user_service.config.context.UserContext;
 import school.faang.user_service.dto.user.CreateUserDto;
+import school.faang.user_service.dto.user.SearchUserDto;
 import school.faang.user_service.dto.user.UpdateUserDto;
 import school.faang.user_service.dto.user.UserDto;
 import school.faang.user_service.entity.Country;
 import school.faang.user_service.entity.User;
 import school.faang.user_service.entity.exception.DataValidationException;
 import school.faang.user_service.entity.exception.ForbiddenException;
+import school.faang.user_service.filter.UserFilter;
 import school.faang.user_service.mapper.UserMapper;
 import school.faang.user_service.repository.CountryRepository;
 import school.faang.user_service.repository.UserRepository;
+
+import java.util.List;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -27,6 +32,22 @@ public class UserServiceImpl implements UserService {
     private final CountryRepository countryRepository;
     private final UserMapper userMapper;
     private final UserContext userContext;
+    private final List<UserFilter> userFilters;
+
+    @Override
+    public List<UserDto> getUsers(SearchUserDto searchUserDto) {
+        Stream<User> filteredUsers = userRepository.findAll().stream();
+
+        for (UserFilter userFilter : userFilters) {
+            if (userFilter.isApplicable(searchUserDto)){
+                filteredUsers = userFilter.apply(filteredUsers, searchUserDto);
+            }
+        }
+
+        return filteredUsers
+                .map(userMapper::toUserDto)
+                .toList();
+    }
 
     @Override
     public UserDto create(CreateUserDto userDto) {
